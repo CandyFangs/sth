@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 ruby '2.2.3'
 
+gem 'sqlite3'
 gem 'bootstrap-sass'
 gem 'coffee-rails', '~> 4.1.0'
 gem 'decent_exposure'
@@ -11,7 +12,6 @@ gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 gem 'haml-rails'
 gem 'high_voltage'
-gem 'pg'
 gem 'rails', '4.2.1'
 gem 'sass-rails', '~> 5.0'
 gem 'simple_form'
@@ -41,6 +41,7 @@ end
 group :production do
   gem 'puma'
   gem 'rails_12factor'
+  gem 'pg'
 end
 
 group :test do
