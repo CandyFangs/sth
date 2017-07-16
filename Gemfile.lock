@@ -73,7 +73,7 @@ GEM
     concurrent-ruby (1.0.5)
     database_cleaner (1.6.1)
     debug_inspector (0.0.3)
-    decent_exposure (3.0.2)
+    decent_exposure (3.0.0)
       activesupport (>= 4.0)
     devise (4.3.0)
       bcrypt (~> 3.0)
@@ -273,7 +273,7 @@ DEPENDENCIES
   capybara
   coffee-rails (~> 4.1.0)
   database_cleaner
-  decent_exposure
+  decent_exposure (= 3.0.0)
   devise
   dotenv-rails
   draper
