@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
   resources :students do
-    get :subjects
+    resources :subjects
   end
   root 'visitors#index'
-  resources :teachers
-  resources :reports do
+  resources :teachers do
     get :subjects
   end
+  get 'reports/subjects', to: 'reports#subjects', as: 'report_subjects'
 end
