@@ -3,6 +3,7 @@ Rails.application.routes.draw do
     resources :subjects
   end
   root 'visitors#index'
+  devise_for :users
   resources :teachers do
     get :subjects
   end
