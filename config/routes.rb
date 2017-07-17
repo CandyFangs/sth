@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   resources :students do
-    resources :subjects
+    get :subjects
   end
   root 'visitors#index'
   devise_for :users
