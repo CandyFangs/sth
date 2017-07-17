@@ -3,9 +3,10 @@
   %ul 
     list of subjects:
     - subject_items.each do |subject_item|
-      %li.subject-item 
+      %ul.subject-item 
         = subject_item.decorate.title_with_assigned_teacher
         %ul 
           Students:
           - subject_item.students.each do |student|
-            %ul= student.decorate.full_name
+            %ul= student.decorate.full_name 
+            %ul= student.decorate.birthdate
