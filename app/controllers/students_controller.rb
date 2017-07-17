@@ -4,11 +4,11 @@ class StudentsController < ApplicationController
   expose(:students) {Student.all}
 
   def index
-    render :index
+    students
   end
 
   def create
-    if student.save(student_params)
+    if student.save
       redirect_to student_path(student), notice: I18n.t('shared.created', resource: 'Student')
     else
       render :new
