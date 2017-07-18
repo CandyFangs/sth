@@ -4,4 +4,8 @@ class ReportsController < ApplicationController
   def subjects
     render :subjects
   end
+
+  def payments
+    render :payments
+  end
 end
