@@ -1,5 +1,8 @@
 = simple_form_for [student, payment] do |f|
-  = f.input :payment_status
+
+  = f.input :payment_status, label: 'Paid'
+  / = f.input :payment_status, name: "Paid"
+
   = f.input :payment_date
   = link_to t('shared.back'), :back, class: 'btn btn-default'
   = f.button :submit
