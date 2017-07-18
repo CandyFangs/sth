@@ -1,3 +1,5 @@
+- breadcrumb :payments
+
 %tr
   %td= student.first_name
   %td= student.last_name
@@ -14,3 +16,9 @@
     = link_to student_subjects_path(student), { title: t('shared.show_subject_items') } do
       %button.btn.btn-default
         = fa_icon "list"
+    = link_to new_student_payment_path(student) do
+      %button.btn.btn-default
+        = fa_icon "money"
+    / = link_to new_student_payments_path(student), { t('shared.payment') } do
+    /   %button.btn.btn-default
+    /     = fa_icon "money"

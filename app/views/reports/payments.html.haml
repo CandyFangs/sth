@@ -1,4 +1,5 @@
 - breadcrumb :payments
+
 .payments
   %table.table.table-condensed
     %thead
@@ -6,4 +7,7 @@
         %th= t('student.columns.first_name')
         %th= t('student.columns.last_name')
         %th= t('payment.columns.payment_status')
+        %th= t('payment.columns.payment_date')
         %th= t('shared.actions')
+    %tbody
+      = render partial: 'student_payments', locals: {payments: @payments}

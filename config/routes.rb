@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   resources :students do
     get :subjects
+    resources :payments
   end
+  resources :payments, only: %I(new create)
   root 'visitors#index'
   devise_for :users
   resources :teachers do

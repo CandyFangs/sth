@@ -6,6 +6,7 @@ class ReportsController < ApplicationController
   end
 
   def payments
+    @payments = Payment.all
     render :payments
   end
 end
