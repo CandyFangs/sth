@@ -1,9 +1,15 @@
 rvm:
   - 2.2.3
-services:
-  - postgresql
+env:
+  - DB=postgresql
+# services:
+#   - postgresql
+script:
+  - RAILS_ENV=test bundle exec rake db:create db:migrate --trace
+  - bundle exec rspec test/
 before_script:
   - psql -c 'create database workshops_test;' -U postgres
   - cp config/database.yml.travis config/database.yml
+bundler_args: --binstubs=./bundler_stubs
 addons:
   postgresql: '9.5'
