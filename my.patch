@@ -1,0 +1,578 @@
+diff --git a/Gemfile b/Gemfile
+index 77b4172..b5f9dc6 100644
+--- a/Gemfile
++++ b/Gemfile
+@@ -9,6 +9,7 @@ gem 'devise'
+ gem 'draper'
+ gem 'font-awesome-rails'
+ gem 'jquery-rails'
++gem 'jquery-datatables-rails', '~> 3.4.0'
+ gem 'jbuilder', '~> 2.0'
+ gem 'haml-rails'
+ gem 'high_voltage'
+diff --git a/Gemfile.lock b/Gemfile.lock
+index 665a382..8bef8ec 100644
+--- a/Gemfile.lock
++++ b/Gemfile.lock
+@@ -129,6 +129,11 @@ GEM
+     jbuilder (2.7.0)
+       activesupport (>= 4.2.0)
+       multi_json (>= 1.2)
++    jquery-datatables-rails (3.4.0)
++      actionpack (>= 3.1)
++      jquery-rails
++      railties (>= 3.1)
++      sass-rails
+     jquery-rails (4.3.1)
+       rails-dom-testing (>= 1, < 3)
+       railties (>= 4.2.0)
+@@ -289,6 +294,7 @@ DEPENDENCIES
+   html2haml
+   hub
+   jbuilder (~> 2.0)
++  jquery-datatables-rails (~> 3.4.0)
+   jquery-rails
+   launchy
+   pg (~> 0.20.0)
+diff --git a/app/assets/javascripts/application.js.coffee b/app/assets/javascripts/application.js.coffee
+index 1c2004a..6f1ffa2 100644
+--- a/app/assets/javascripts/application.js.coffee
++++ b/app/assets/javascripts/application.js.coffee
+@@ -10,8 +10,12 @@
+ # Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
+ # about supported directives.
+ #
+-#= require jquery
+-#= require jquery_ujs
+-#= require turbolinks
+-#= require bootstrap-sprockets
+-#= require_tree .
++
++//= require jquery
++//= require jquery_ujs
++//= require dataTables/jquery.dataTables
++//= require bootstrap-sprockets
++//= require turbolinks
++//= require_tree .
++
++jQuery -> $('.datatable').DataTable();
+diff --git a/app/assets/javascripts/payments.coffee b/app/assets/javascripts/payments.coffee
+new file mode 100644
+index 0000000..1702eb7
+--- /dev/null
++++ b/app/assets/javascripts/payments.coffee
+@@ -0,0 +1,4 @@
++
++# Place all the behaviors and hooks related to the matching controller here.
++# All this logic will automatically be available in application.js.
++# You can use CoffeeScript in this file: http://coffeescript.org/
+diff --git a/app/assets/javascripts/tables.js b/app/assets/javascripts/tables.js
+new file mode 100644
+index 0000000..fefe0a1
+--- /dev/null
++++ b/app/assets/javascripts/tables.js
+@@ -0,0 +1,7 @@
++var ready;
++ready = function() {
++  $('.table').DataTable();
++};
++console.log('ready');
++$(document).ready(ready);
++$(document).on('page:load', ready);
+\ No newline at end of file
+diff --git a/app/assets/stylesheets/application.scss b/app/assets/stylesheets/application.scss
+index 2531de4..e0f8482 100644
+--- a/app/assets/stylesheets/application.scss
++++ b/app/assets/stylesheets/application.scss
+@@ -11,6 +11,7 @@
+  * file per style scope.
+  *
+  *= require_tree .
++ *= require dataTables/jquery.dataTables
+  *= require_self
+  *= require font-awesome
+  */
+diff --git a/app/controllers/payments_controller.rb b/app/controllers/payments_controller.rb
+new file mode 100644
+index 0000000..581d47e
+--- /dev/null
++++ b/app/controllers/payments_controller.rb
+@@ -0,0 +1,33 @@
++class PaymentsController < ApplicationController
++  expose(:payment, attributes: :payment_params)
++  expose(:student_payment) { student.payments }
++  expose(:student)
++
++  def create
++    if payment.save
++      student_payment << payment
++      redirect_to students_path, notice: I18n.t('shared.created', resource: 'Payment')
++    else
++      render :new
++    end
++  end
++
++  def update
++    if payment.update(payment_params)
++      redirect_to report_payments_path, notice: I18n.t('shared.updated', resource: 'Payment')
++    else
++      render :edit
++    end
++  end
++
++  def destroy
++    payment.destroy
++    redirect_to report_payments_path, notice: I18n.t('shared.updated', resource: 'Payment')
++  end
++
++  private
++
++  def payment_params
++    params.require(:payment).permit(:payment_status, :payment_date, student: [:student_id])
++  end
++end
+diff --git a/app/controllers/reports_controller.rb b/app/controllers/reports_controller.rb
+index 4e85b45..54d28a9 100644
+--- a/app/controllers/reports_controller.rb
++++ b/app/controllers/reports_controller.rb
+@@ -4,4 +4,9 @@ class ReportsController < ApplicationController
+   def subjects
+     render :subjects
+   end
++
++  def payments
++    @payments = Payment.all
++    render :payments
++  end
+ end
+diff --git a/app/controllers/students_controller.rb b/app/controllers/students_controller.rb
+index c1cd43f..8e44914 100644
+--- a/app/controllers/students_controller.rb
++++ b/app/controllers/students_controller.rb
+@@ -31,6 +31,6 @@ class StudentsController < ApplicationController
+   private
+ 
+   def student_params
+-    params.require(:student).permit(:first_name, :last_name, subject_item_ids: [])
++    params.require(:student).permit(:first_name, :last_name, :birthdate, subject_item_ids: [])
+   end
+ end
+diff --git a/app/decorators/payment_decorator.rb b/app/decorators/payment_decorator.rb
+new file mode 100644
+index 0000000..c5b7bad
+--- /dev/null
++++ b/app/decorators/payment_decorator.rb
+@@ -0,0 +1,13 @@
++class PaymentDecorator < Draper::Decorator
++  delegate_all
++
++  # Define presentation-specific methods here. Helpers are accessed through
++  # `helpers` (aka `h`). You can override attributes, for example:
++  #
++  #   def created_at
++  #     helpers.content_tag :span, class: 'time' do
++  #       object.created_at.strftime("%a %m/%d/%y")
++  #     end
++  #   end
++
++end
+diff --git a/app/helpers/payments_helper.rb b/app/helpers/payments_helper.rb
+new file mode 100644
+index 0000000..c1b884f
+--- /dev/null
++++ b/app/helpers/payments_helper.rb
+@@ -0,0 +1,2 @@
++module PaymentsHelper
++end
+diff --git a/app/models/payment.rb b/app/models/payment.rb
+new file mode 100644
+index 0000000..54df07c
+--- /dev/null
++++ b/app/models/payment.rb
+@@ -0,0 +1,3 @@
++class Payment < ActiveRecord::Base
++  belongs_to :student
++end
+diff --git a/app/models/student.rb b/app/models/student.rb
+index 9930abb..e48dfc1 100644
+--- a/app/models/student.rb
++++ b/app/models/student.rb
+@@ -2,6 +2,7 @@ class Student < ActiveRecord::Base
+   has_many :participations, dependent: :destroy
+   has_many :subject_item_notes, dependent: :destroy
+   has_many :subject_items, through: :participations
++  has_many :payments, dependent: :destroy
+   
+   validates :first_name, :last_name, presence: true
+ 
+diff --git a/app/views/layouts/_navigation.html.haml b/app/views/layouts/_navigation.html.haml
+index 36ad515..eecc7b7 100644
+--- a/app/views/layouts/_navigation.html.haml
++++ b/app/views/layouts/_navigation.html.haml
+@@ -20,6 +20,8 @@
+           %ul.dropdown-menu
+             %li{ class: active?(report_subjects_path) }
+               = link_to t('navbar.reports_subjects'), report_subjects_path
++            %li{ class: active?(report_payments_path) }
++              = link_to t('navbar.reports_payments'), report_payments_path
+       %ul.nav.navbar-nav.navbar-right
+         - if user_signed_in?
+           %li
+diff --git a/app/views/payments/_form.html.haml b/app/views/payments/_form.html.haml
+new file mode 100644
+index 0000000..ef7aedf
+--- /dev/null
++++ b/app/views/payments/_form.html.haml
+@@ -0,0 +1,8 @@
++= simple_form_for [student, payment] do |f|
++
++  = f.input :payment_status, label: 'Paid'
++  / = f.input :payment_status, name: "Paid"
++
++  = f.input :payment_date
++  = link_to t('shared.back'), :back, class: 'btn btn-default'
++  = f.button :submit
+diff --git a/app/views/payments/edit.html.haml b/app/views/payments/edit.html.haml
+new file mode 100644
+index 0000000..bcc5832
+--- /dev/null
++++ b/app/views/payments/edit.html.haml
+@@ -0,0 +1 @@
++= render 'form'
+diff --git a/app/views/payments/new.html.haml b/app/views/payments/new.html.haml
+new file mode 100644
+index 0000000..4a07e97
+--- /dev/null
++++ b/app/views/payments/new.html.haml
+@@ -0,0 +1,4 @@
++%tr
++  %td= student.first_name
++  %td= student.last_name
++= render 'form'
+diff --git a/app/views/reports/_student_payments.html.haml b/app/views/reports/_student_payments.html.haml
+new file mode 100644
+index 0000000..202ed79
+--- /dev/null
++++ b/app/views/reports/_student_payments.html.haml
+@@ -0,0 +1,14 @@
++- payments.each do |payment|
++
++  %tr
++    %td= payment.student.first_name
++    %td= payment.student.last_name
++    %td= payment.payment_date.to_formatted_s(:short)
++    %td= payment.payment_status ? 'paid' : 'unpaid'
++    %td
++      = link_to edit_student_payment_path(payment.student, payment), { title: t('shared.edit') } do
++        %button.btn.btn-default
++          = fa_icon "edit"
++      = link_to student_payment_path(payment.student, payment), { method: :delete, data: { confirm: "Cofirm delete?" }, title: t('shared.delete') }do
++        %button.btn.btn-default
++          = fa_icon "times"
+\ No newline at end of file
+diff --git a/app/views/reports/_subject_item.html.haml b/app/views/reports/_subject_item.html.haml
+index 11fb9ca..700e082 100644
+--- a/app/views/reports/_subject_item.html.haml
++++ b/app/views/reports/_subject_item.html.haml
+@@ -9,4 +9,4 @@
+     - subject_item.students.each do |student|
+       %tr
+         %td= student.decorate.full_name
+-        / %td= student.decorate.avg_notes(subject_item)
++
+diff --git a/app/views/reports/payments.html.haml b/app/views/reports/payments.html.haml
+new file mode 100644
+index 0000000..f569718
+--- /dev/null
++++ b/app/views/reports/payments.html.haml
+@@ -0,0 +1,13 @@
++- breadcrumb :payments
++
++.payments
++  %table.table.table-condensed
++    %thead
++      %tr
++        %th= t('student.columns.first_name')
++        %th= t('student.columns.last_name')
++        %th= t('payment.columns.payment_date')
++        %th= t('payment.columns.payment_status')
++        %th= t('shared.actions')
++    %tbody
++      = render partial: 'student_payments', locals: {payments: @payments}
+\ No newline at end of file
+diff --git a/app/views/reports/subjects.html.haml b/app/views/reports/subjects.html.haml
+index 9490d3e..b35f105 100644
+--- a/app/views/reports/subjects.html.haml
++++ b/app/views/reports/subjects.html.haml
+@@ -3,9 +3,10 @@
+   %ul 
+     list of subjects:
+     - subject_items.each do |subject_item|
+-      %li.subject-item 
++      %ul.subject-item 
+         = subject_item.decorate.title_with_assigned_teacher
+         %ul 
+           Students:
+           - subject_item.students.each do |student|
+-            %ul= student.decorate.full_name
++            %ul= student.decorate.full_name 
++            %ul= student.decorate.birthdate
+\ No newline at end of file
+diff --git a/app/views/students/_form.html.haml b/app/views/students/_form.html.haml
+index fd22ba3..18f38e9 100644
+--- a/app/views/students/_form.html.haml
++++ b/app/views/students/_form.html.haml
+@@ -1,6 +1,7 @@
+ = simple_form_for student do |f|
+   = f.input :first_name
+   = f.input :last_name
++  = f.input :birthdate, as: :date, start_year: Date.today.year - 50, end_year: Date.today.year - 10
+   = f.association :subject_items, label_method: :title, value_method: :id, label: 'Subject Items', as: :check_boxes
+   = link_to t('shared.back'), students_path, class: 'btn btn-default'
+   = f.button :submit
+diff --git a/app/views/students/_student.haml b/app/views/students/_student.haml
+index 863fec9..85125e6 100644
+--- a/app/views/students/_student.haml
++++ b/app/views/students/_student.haml
+@@ -1,3 +1,5 @@
++- breadcrumb :payments
++
+ %tr
+   %td= student.first_name
+   %td= student.last_name
+@@ -14,3 +16,9 @@
+     = link_to student_subjects_path(student), { title: t('shared.show_subject_items') } do
+       %button.btn.btn-default
+         = fa_icon "list"
++    = link_to new_student_payment_path(student) do
++      %button.btn.btn-default
++        = fa_icon "money"
++    / = link_to new_student_payments_path(student), { t('shared.payment') } do
++    /   %button.btn.btn-default
++    /     = fa_icon "money"
+diff --git a/app/views/students/index.html.haml b/app/views/students/index.html.haml
+index c26e6d1..363958c 100644
+--- a/app/views/students/index.html.haml
++++ b/app/views/students/index.html.haml
+@@ -1,10 +1,16 @@
+ - breadcrumb :students
++
++:javascript
++  $(document).ready(function() {
++    $('.datatable').dataTable();
++  } );
++
+ = link_to t('shared.add_new_item'), new_student_path, class: 'btn btn-default'
+-%table.table.table-condensed
++%table.table.table-condensed.datatable
+   %thead
+     %tr
+       %th= t('student.columns.first_name')
+       %th= t('student.columns.last_name')
+       %th= t('shared.actions')
+   %tbody
+-    = render students
++    = render students
+\ No newline at end of file
+diff --git a/app/views/students/show.html.haml b/app/views/students/show.html.haml
+index 1f366d9..3bc367f 100644
+--- a/app/views/students/show.html.haml
++++ b/app/views/students/show.html.haml
+@@ -7,5 +7,8 @@
+     %tr
+       %td= "#{t('student.columns.last_name')}:"
+       %td= student.last_name
++    %tr
++      %td= "#{t('student.columns.birthdate')}:"
++      %td= student.birthdate
+ 
+ = link_to t('shared.back'), students_path, class: 'btn btn-default'
+diff --git a/config/breadcrumbs.rb b/config/breadcrumbs.rb
+index ee6f3e6..737eeee 100644
+--- a/config/breadcrumbs.rb
++++ b/config/breadcrumbs.rb
+@@ -33,3 +33,7 @@ end
+ crumb :subjects do
+   link t('navbar.reports_subjects'), report_subjects_path
+ end
++
++crumb :payments do
++  link t('navbar.reports_payments'), report_payments_path
++end
+diff --git a/config/locales/en.yml b/config/locales/en.yml
+index dd9e84c..87ae601 100644
+--- a/config/locales/en.yml
++++ b/config/locales/en.yml
+@@ -4,6 +4,7 @@ en:
+     teachers: Teachers
+     reports: Reports
+     reports_subjects: Subjects
++    reports_payments: Payments
+     logout: Logout
+     signin: Sign in
+     signup: Sign up
+@@ -11,24 +12,25 @@ en:
+     created: "%{resource} has been created!"
+     updated: "%{resource} has been updated!"
+     deleted: "%{resource} has been deleted!"
+-    actions: actions
+-    edit: edit
+-    show: show
+-    delete: delete
+-    show_subject_items: show subjects
++    actions: Actions
++    edit: Edit
++    show: Show
++    delete: Delete
++    show_subject_items: Show subjects
+     back: Back
+     add_new_item: Add new one
+-    subjects: subjects
++    subjects: Subjects
+   student:
+     columns:
+-      first_name: first name
+-      last_name: last name
++      first_name: First name
++      last_name: Last name
++      birthdate: Birthdate
+   teacher:
+     columns:
+-      first_name: first name
+-      last_name: last name
+-      academic_title: academic title
++      first_name: First name
++      last_name: Last name
++      academic_title: Academic title
+   subjects:
+     columns:
+       full_name: Full name
+-      avg_notes: Notes avarange
++      avg_notes: Notes average
+diff --git a/config/routes.rb b/config/routes.rb
+index e9d3e83..1b67cbc 100644
+--- a/config/routes.rb
++++ b/config/routes.rb
+@@ -1,11 +1,14 @@
+ Rails.application.routes.draw do
+   resources :students do
+     get :subjects
++    resources :payments
+   end
++  resources :payments, only: %I(new create)
+   root 'visitors#index'
+   devise_for :users
+   resources :teachers do
+     get :subjects
+   end
+   get 'reports/subjects', to: 'reports#subjects', as: 'report_subjects'
++  get 'reports/payments', to: 'reports#payments', as: 'report_payments'
+ end
+diff --git a/db/migrate/20170717151948_add_birthdate_to_students.rb b/db/migrate/20170717151948_add_birthdate_to_students.rb
+new file mode 100644
+index 0000000..08ba54f
+--- /dev/null
++++ b/db/migrate/20170717151948_add_birthdate_to_students.rb
+@@ -0,0 +1,5 @@
++class AddBirthdateToStudents < ActiveRecord::Migration
++  def change
++    add_column :students, :birthdate, :date
++  end
++end
+diff --git a/db/migrate/20170718074314_create_payments.rb b/db/migrate/20170718074314_create_payments.rb
+new file mode 100644
+index 0000000..4035b20
+--- /dev/null
++++ b/db/migrate/20170718074314_create_payments.rb
+@@ -0,0 +1,12 @@
++class CreatePayments < ActiveRecord::Migration
++  def change
++    create_table :payments do |t|
++      t.integer :student_id
++      t.date :payment_date
++      t.boolean :payment_status, default: false, null: false
++
++      t.timestamps null: false
++    end
++    add_foreign_key :payments, :students
++  end
++end
+diff --git a/db/schema.rb b/db/schema.rb
+index f333ff4..5970b6e 100644
+--- a/db/schema.rb
++++ b/db/schema.rb
+@@ -11,7 +11,7 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 20150719115626) do
++ActiveRecord::Schema.define(version: 20170718074314) do
+ 
+   # These are extensions that must be enabled in order to support this database
+   enable_extension "plpgsql"
+@@ -26,11 +26,20 @@ ActiveRecord::Schema.define(version: 20150719115626) do
+   add_index "participations", ["student_id"], name: "index_participations_on_student_id", using: :btree
+   add_index "participations", ["subject_item_id"], name: "index_participations_on_subject_item_id", using: :btree
+ 
++  create_table "payments", force: :cascade do |t|
++    t.integer  "student_id"
++    t.date     "payment_date"
++    t.boolean  "payment_status", default: false, null: false
++    t.datetime "created_at",                     null: false
++    t.datetime "updated_at",                     null: false
++  end
++
+   create_table "students", force: :cascade do |t|
+     t.string   "first_name"
+     t.string   "last_name"
+     t.datetime "created_at", null: false
+     t.datetime "updated_at", null: false
++    t.date     "birthdate"
+   end
+ 
+   create_table "subject_item_notes", force: :cascade do |t|
+@@ -81,7 +90,8 @@ ActiveRecord::Schema.define(version: 20150719115626) do
+ 
+   add_foreign_key "participations", "students"
+   add_foreign_key "participations", "subject_items"
++  add_foreign_key "payments", "students"
+   add_foreign_key "subject_item_notes", "students"
+   add_foreign_key "subject_item_notes", "subject_items"
+   add_foreign_key "subject_items", "teachers"
+-end
+\ No newline at end of file
++end
+diff --git a/spec/decorators/payment_decorator_spec.rb b/spec/decorators/payment_decorator_spec.rb
+new file mode 100644
+index 0000000..ac79341
+--- /dev/null
++++ b/spec/decorators/payment_decorator_spec.rb
+@@ -0,0 +1,4 @@
++require 'spec_helper'
++
++describe PaymentDecorator do
++end
+diff --git a/spec/factories/payments.rb b/spec/factories/payments.rb
+new file mode 100644
+index 0000000..4135940
+--- /dev/null
++++ b/spec/factories/payments.rb
+@@ -0,0 +1,7 @@
++FactoryGirl.define do
++  factory :payment do
++    student_id 1
++    payment_date "2017-07-18"
++    payment_status false
++  end
++end
+diff --git a/spec/models/payment_spec.rb b/spec/models/payment_spec.rb
+new file mode 100644
+index 0000000..c185224
+--- /dev/null
++++ b/spec/models/payment_spec.rb
+@@ -0,0 +1,5 @@
++require 'rails_helper'
++
++RSpec.describe Payment, type: :model do
++  pending "add some examples to (or delete) #{__FILE__}"
++end
