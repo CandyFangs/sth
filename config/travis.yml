@@ -1,19 +1,9 @@
 rvm:
   - 2.2.3
-env:
-  - DB=pgsql
-
 services:
   - postgresql
-
-script:
-  - RAILS_ENV=test bundle exec rake db:migrate --trace
-  - bundle exec rake db:test:prepare
-  - bundle exec rake
-
 before_script:
+  - psql -c 'create database workshops_development;' -U postgres
   - cp config/database.yml.travis config/database.yml
-  - psql -c 'create database courseselect_test;' -U postgres
-
 addons:
   postgresql: '9.3'
