@@ -10,12 +10,12 @@ feature 'User checks student subjects' do
     sign_in
     expect(page).to have_content 'Logout'
     visit students_path
-    find(:xpath, "//a[@title='show subjects']").click
+    find(:xpath, "//a[@title='Show subjects']").click
   end
 
   scenario do
     within('.breadcrumbs') do
-      expect(page).to have_content 'RoR Workhops » Students » Jan Nowak subjects'
+      expect(page).to have_content 'RoR Workhops » Students » Jan Nowak Subjects'
     end
 
     expect(page).to have_content 'Math'

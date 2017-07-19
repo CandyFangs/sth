@@ -8,7 +8,7 @@ feature 'User edits teacher spec' do
     sign_in
     expect(page).to have_content 'Logout'
     visit teachers_path
-    find(:xpath, "//a[@title='edit']").click
+    find(:xpath, "//a[@title='Edit']").click
   end
 
   scenario 'and checks breadcrumbs presence' do
@@ -29,7 +29,7 @@ feature 'User edits teacher spec' do
     expect(page).to have_no_content 'History of NY (Pies Pluto)'
 
     visit teachers_path
-    find(:xpath, "//a[@title='edit']").click
+    find(:xpath, "//a[@title='Edit']").click
     find("input[type='checkbox']").set(true)
     click_button 'Update Teacher'
 

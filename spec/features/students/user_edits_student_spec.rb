@@ -8,7 +8,7 @@ feature 'User edits student' do
     sign_in
     expect(page).to have_content 'Logout'
     visit students_path
-    find(:xpath, "//a[@title='edit']").click
+    find(:xpath, "//a[@title='Edit']").click
   end
 
   scenario 'and checks breadcrumbs presence' do
@@ -35,7 +35,7 @@ feature 'User edits student' do
     expect(page).to have_no_content 'Jan Abacki'
 
     visit students_path
-    find(:xpath, "//a[@title='edit']").click
+    find(:xpath, "//a[@title='Edit']").click
     find("input[type='checkbox']").set(true)
     click_button 'Update Student'
 

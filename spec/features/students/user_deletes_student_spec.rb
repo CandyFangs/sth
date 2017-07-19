@@ -11,7 +11,7 @@ feature 'User deletes student' do
   end
 
   scenario do
-    find(:xpath, "//a[@title='delete']").click
+    find(:xpath, "//a[@title='Delete']").click
     expect(page).to have_content 'Student has been deleted!'
     expect(page).to have_no_content 'Jan'
   end
@@ -21,7 +21,7 @@ feature 'User deletes student' do
     let!(:subject_item_note) { create :subject_item_note, subject_item: subject_item, student: student }
 
     scenario do
-      find(:xpath, "//a[@title='delete']").click
+      find(:xpath, "//a[@title='Delete']").click
       expect(page).to have_content 'Student has been deleted!'
       expect(page).to have_no_content 'Jan'
     end

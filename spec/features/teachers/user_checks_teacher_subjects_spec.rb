@@ -8,12 +8,12 @@ feature 'User checks teacher subjects' do
     sign_in
     expect(page).to have_content 'Logout'
     visit teachers_path
-    find(:xpath, "//a[@title='show subjects']").click
+    find(:xpath, "//a[@title='Show subjects']").click
   end
 
   scenario do
     within('.breadcrumbs') do
-      expect(page).to have_content 'RoR Workhops » Teachers » Pies Pluto subjects'
+      expect(page).to have_content 'RoR Workhops » Teachers » Pies Pluto Subjects'
     end
 
     expect(page).to have_content 'Boring subject item'

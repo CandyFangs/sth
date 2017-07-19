@@ -7,7 +7,7 @@ feature 'User checks student details' do
     sign_in
     expect(page).to have_content 'Logout'
     visit students_path
-    find(:xpath, "//a[@title='show']").click
+    find(:xpath, "//a[@title='Show']").click
   end
 
   scenario do
