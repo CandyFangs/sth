@@ -1,3 +1,4 @@
+# Adding new model Payment
 class CreatePayments < ActiveRecord::Migration
   def change
     create_table :payments do |t|
