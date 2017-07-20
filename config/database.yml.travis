@@ -1,0 +1,5 @@
+test:
+  adapter:  postgresql
+  username: postgres
+  database: workshops_test
+  pool: 5
