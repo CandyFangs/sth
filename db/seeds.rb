@@ -16,7 +16,7 @@ end
 teachers = Teacher.all
 5.times do
   SubjectItem.create!(
-    title: subjects_titles.sample
+    title: subjects_titles.sample,
     teacher: teachers.sample
   )
 end
